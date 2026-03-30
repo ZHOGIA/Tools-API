@@ -96,6 +96,4 @@ Project ini sangat bisa mendukung setup **Decoupled**. Artinya: FrontEnd (Tampil
    ```
 *Catatan: Hal ini diizinkan karena `app.py` sudah diatur dengan `CORS(app)`.*
 
----
 
-*Dibuat oleh AI asisten Anda - Antigravity untuk project PHOEBE'S STUDIO.*
