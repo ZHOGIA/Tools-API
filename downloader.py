@@ -23,6 +23,10 @@ def get_info(url):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         
+        duration = info.get('duration', 0)
+        if duration > 3600:
+            raise Exception("Video ditolak: Durasi maksimal yang diizinkan untuk semua proses adalah 1 jam.")
+        
         # Cukup gunakan daftar bitrate konversi tetap untuk MP3 karena FFmpeg akan memprosesnya.
         audio_formats = [
             {'format_id': 'bestaudio', 'ext': 'mp3', 'abr': 512, 'filesize': 0},
@@ -92,6 +96,13 @@ def download_task(url, format_type, quality, task_id):
         with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
             info = ydl.extract_info(url, download=False)
             clean_title = clean_filename(info['title'])
+            
+            # Pengecekan limitasi durasi dan resolusi
+            duration = info.get('duration', 0)
+            if duration > 3600:
+                TASKS[task_id]['status'] = 'error'
+                TASKS[task_id]['error'] = "Ditolak: Durasi video melebihi batas maksimal 1 Jam. Mohon maaf, untuk menjaga kestabilan server, kami membatasi unduhan/konversi maksimal 1 jam untuk semua format."
+                return
             
         temp_filename = f"{clean_title}_{task_id}"
         temp_path = os.path.join(DOWNLOAD_DIR, temp_filename + ".%(ext)s")
