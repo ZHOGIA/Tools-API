@@ -345,6 +345,34 @@ def bg_download(file_id):
         task = BG_TASKS.get(file_id)
     if not task or not os.path.exists(task.get("path", "")):
         return jsonify({"error": "File tidak ditemukan atau sudah kedaluwarsa (10 menit)."}), 404
+        
+    color_hex = request.args.get('color')
+    if color_hex and color_hex.lower() != 'transparent':
+        try:
+            from PIL import Image
+            import io
+            
+            if not color_hex.startswith('#'):
+                color_hex = '#' + color_hex
+                
+            orig_img = Image.open(task["path"]).convert("RGBA")
+            bg = Image.new("RGBA", orig_img.size, color_hex)
+            # Tempelkan gambar asli di atas background warna menggunakan channel alpha-nya sendiri sebagai mask
+            bg.paste(orig_img, (0, 0), orig_img)
+            
+            # Convert to RGB to save as JPEG
+            bg = bg.convert("RGB")
+            
+            memory_file = io.BytesIO()
+            bg.save(memory_file, format="JPEG", quality=95)
+            memory_file.seek(0)
+            
+            return send_file(memory_file, mimetype='image/jpeg', as_attachment=True, download_name="removed-bg-colored.jpg")
+        except Exception as e:
+            # Fallback jika terjadi error
+            print(f"[BG Download] Gagal menambahkan warna: {e}")
+            pass
+            
     return send_file(task["path"], as_attachment=True, download_name="removed-bg.png")
 
 
